@@ -9,7 +9,7 @@ You'll have to set up the virtual environment yourself if you don't know how jus
 Here's the basic file layout:
 
 ### Network:
-This will be for processing the data sent by our ESP32s. Right now I have it set up as a UDP server and expects the files in JSON format. If its different I can reconfigure it but this seems to work pretty well. 
+This will be for receiving the data sent by our ESP32s. Right now I have it set up as a UDP server running asynchronously and expects the files in JSON format. If its different I can reconfigure it but this seems to work pretty well. 
 
 ### Processing: 
 I haven't done anything in this yet but it'll probably just be data processing. 
