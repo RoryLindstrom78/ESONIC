@@ -1,5 +1,6 @@
 import device_state
 import asyncio
+import glove_manager
 
 class DeviceManager:
     """
@@ -11,11 +12,8 @@ class DeviceManager:
     """
     def __init__(self, glove1, glove2, glove3, glove4):
         self.state = device_state.InstrumentState.INIT
-        # Gloves (1s angle is calculated with 3, 2s is calculated with 4)
-        self.glove1 = glove1
-        self.glove2 = glove2
-        self.glove3 = glove3
-        self.glove4 = glove4
+        # Gloves (just constructed as a list of GloveManagers)
+        self.gloves = {i: glove_manager.GloveManager() for i in range(4)}
 
         # angle calculations dependent on this semaphore. We only calculate when we release it.
         self._angle_semaphore = asyncio.Semaphore(0)

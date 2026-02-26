@@ -10,7 +10,7 @@ class InstrumentState(Enum):
         LOCKED: Hand movements do not effect pitch, lead notes still playable
         MODULATION: Hand movements do not effect pitch, lead notes serve modulation purposes
     """
-
+    INIT = 0
     MOVEMENT = 1
     LOCKED  = 2
     MODULATION = 3
