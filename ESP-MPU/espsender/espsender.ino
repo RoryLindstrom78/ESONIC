@@ -5,11 +5,11 @@
 #include <WiFiUdp.h>
 
 //WIFI stuff
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "";        //ex: Velocity WiFi
+const char* password = "";    // enter password
 
 const char* udpAddress = "";  // PC's IP
-const int udpPort = 61000;                 // Port on PC
+const int udpPort = 61000;    // Port on PC
 
 WiFiUDP udp;
 
