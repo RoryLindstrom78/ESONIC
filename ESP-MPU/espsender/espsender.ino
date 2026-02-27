@@ -6,10 +6,10 @@
 #include <ArduinoJson.h>
 
 //WIFI stuff
-const char* ssid = "Velocity Wi-Fi";        //ex: Velocity Wi-Fi
-const char* password = "zphwoksk";    // enter password
+const char* ssid = "Velocity Wi-Fi";  //ex: Velocity Wi-Fi
+const char* password = "zphwoksk";    //enter password, here's bad security practice :)
 
-const char* udpAddress = "10.7.236.41";  // PC's IP //Rory's: 10.7.236.41 //Leslie's: 10.7.119.112
+const char* udpAddress = "10.7.119.112";  // PC's IP //Rory's: 10.7.236.41 //Leslie's: 10.7.119.112
 const int udpPort = 61000;    // Port on PC 
 
 WiFiUDP udp;
@@ -56,21 +56,16 @@ void loop() {
   JsonDocument JSONbuffer;
   //JsonObject JSONencoder = JSONbuffer.to<JsonObject>();
 
-  JSONbuffer["id"] = "1";
-  JSONbuffer["ax"] = String(a.acceleration.x);
-  JSONbuffer["ay"] = String(a.acceleration.y);
-  JSONbuffer["az"] = String(a.acceleration.z);
-  JSONbuffer["gx"] = String(g.gyro.x);
-  JSONbuffer["gy"] = String(g.gyro.y);
-  JSONbuffer["gz"] = String(g.gyro.z);
-
-  serializeJsonPretty(JSONbuffer, Serial);
+  JSONbuffer["id"] = 1;
+  JSONbuffer["ax"] = a.acceleration.x;
+  JSONbuffer["ay"] = a.acceleration.y;
+  JSONbuffer["az"] = a.acceleration.z;
+  JSONbuffer["gx"] = g.gyro.x;
+  JSONbuffer["gy"] = g.gyro.y;
+  JSONbuffer["gz"] = g.gyro.z;
 
   udp.beginPacket(udpAddress, udpPort);
-
-  char payload[50];
-  serializeJson(JSONbuffer, payload);
-  udp.print(payload);
+  serializeJson(JSONbuffer, udp);
   udp.endPacket();
 
   delay(200);
