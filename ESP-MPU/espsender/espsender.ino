@@ -5,11 +5,11 @@
 #include <WiFiUdp.h>
 
 //WIFI stuff
-const char* ssid = "";        //ex: Velocity WiFi
-const char* password = "";    // enter password
+const char* ssid = "Velocity Wi-Fi";        //ex: Velocity Wi-Fi
+const char* password = "zphwoksk";    // enter password
 
-const char* udpAddress = "";  // PC's IP
-const int udpPort = 61000;    // Port on PC
+const char* udpAddress = "10.7.236.41";  // PC's IP //Rory's: 10.7.236.41 //Leslie's: 10.7.119.112
+const int udpPort = 61000;    // Port on PC 
 
 WiFiUDP udp;
 
@@ -29,7 +29,7 @@ void setup() {
   }
   Serial.println();
   Serial.print("Connected. IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(udpAddress);
   
   //MPU setup
   // Try to initialize!
@@ -57,7 +57,7 @@ void loop() {
   udp.print(dataString);
   udp.endPacket();
 
-  Serial.println(dataString);  
+  Serial.println(dataString);
   delay(200);
 }
 
