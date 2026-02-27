@@ -13,10 +13,12 @@ class UDPServer(asyncio.DatagramProtocol):
 
         {
             "id": 1,
-            "t": 1708140034.123,
             "ax": 0.12,
             "ay": -0.87,
-            "az": 9.81
+            "az": 9.81,
+            "gx": 0,
+            "gy": 0,
+            "gz": 0
         }
 
         Where:
