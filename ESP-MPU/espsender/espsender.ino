@@ -3,6 +3,7 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 #include <WiFiUdp.h>
+#include <ArduinoJson.h>
 
 //WIFI stuff
 const char* ssid = "Velocity Wi-Fi";        //ex: Velocity Wi-Fi
@@ -15,6 +16,9 @@ WiFiUDP udp;
 
 // MPU code
 Adafruit_MPU6050 mpu;
+
+JsonDocument JSONbuffer;
+JsonObject JSONencoder = JSONbuffer.to<JsonObject>();
 
 void setup() {
   // Init Serial Monitor
@@ -49,15 +53,26 @@ void loop() {
   sensors_event_t a, g, t;
   mpu.getEvent(&a, &g, &t);
 
-  String dataString = "";
-  dataString += "Accel2 X:" + String(a.acceleration.x) + ", Y:" + String(a.acceleration.y) + ", Z:" + String(a.acceleration.z);
-  dataString += " | Gyro2 X:" + String(g.gyro.x) + ", Y:" + String(g.gyro.y) + ", Z:" + String(g.gyro.z);
+  JsonDocument JSONbuffer;
+  //JsonObject JSONencoder = JSONbuffer.to<JsonObject>();
+
+  JSONbuffer["id"] = "1";
+  JSONbuffer["ax"] = String(a.acceleration.x);
+  JSONbuffer["ay"] = String(a.acceleration.y);
+  JSONbuffer["az"] = String(a.acceleration.z);
+  JSONbuffer["gx"] = String(g.gyro.x);
+  JSONbuffer["gy"] = String(g.gyro.y);
+  JSONbuffer["gz"] = String(g.gyro.z);
+
+  serializeJsonPretty(JSONbuffer, Serial);
 
   udp.beginPacket(udpAddress, udpPort);
-  udp.print(dataString);
+
+  char payload[50];
+  serializeJson(JSONbuffer, payload);
+  udp.print(payload);
   udp.endPacket();
 
-  Serial.println(dataString);
   delay(200);
 }
 
