@@ -7,11 +7,13 @@
 
 //WIFI stuff
 const char* ssid = "Velocity Wi-Fi";  //ex: Velocity Wi-Fi
-const char* password = "zphwoksk";    //enter password, here's bad security practice :)
+const char* password = "zphwoksk";    //enter password, here's bad security practice aka my password :)
 
-const char* udpAddress = "10.7.119.112";  // PC's IP //Rory's: 10.7.236.41 //Leslie's: 10.7.119.112
-const int udpPort = 61000;    // Port on PC 
+const char* udpAddress = "10.7.119.116";  // PC's IP  // TODO: ***CHANGE THIS**** is there an automated way
+const int udpPort = 5005;                 // Port on PC 
 
+// macAddress
+String espmacAddress = "";
 WiFiUDP udp;
 
 // MPU code
@@ -25,16 +27,23 @@ void setup() {
   Serial.begin(115200);
 
   //Connect to WiFi
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    Serial.print(WiFi.status());
   }
   Serial.println();
-  Serial.print("Connected. IP: ");
+  Serial.print("Connected. Destination IP: ");
   Serial.println(udpAddress);
-  
+
+  // Getting the ESP mac address
+  espmacAddress = WiFi.macAddress();
+  Serial.print("macAddress: ");
+  Serial.println(espmacAddress);
+
   //MPU setup
   // Try to initialize!
   if (!mpu.begin()) {
@@ -46,17 +55,20 @@ void setup() {
   Serial.println("MPU6050 Found!");
   Serial.println("");
   delay(100);
+  //udp.begin(udpPort);
 }
  
 void loop() {
   // // Set values to send
   sensors_event_t a, g, t;
   mpu.getEvent(&a, &g, &t);
-
-  JsonDocument JSONbuffer;
-  //JsonObject JSONencoder = JSONbuffer.to<JsonObject>();
-
-  JSONbuffer["id"] = 1;
+  if (espmacAddress == "28:05:A5:32:DE:D0"){
+    JSONbuffer["id"] = 1;
+  }else if (espmacAddress == "B0:CB:D8:E9:63:28"){
+    JSONbuffer["id"] = 2;
+  }else{
+    JSONbuffer["id"] = 3;
+  }
   JSONbuffer["ax"] = a.acceleration.x;
   JSONbuffer["ay"] = a.acceleration.y;
   JSONbuffer["az"] = a.acceleration.z;
@@ -67,6 +79,9 @@ void loop() {
   udp.beginPacket(udpAddress, udpPort);
   serializeJson(JSONbuffer, udp);
   udp.endPacket();
+  serializeJson(JSONbuffer, Serial);
+  Serial.println("");
+  
 
   delay(200);
 }

@@ -5,6 +5,7 @@ import time
 import math
 import queue
 
+UDP_PORT = 5005
 
 class UDPServer(asyncio.DatagramProtocol):
     """
@@ -23,10 +24,15 @@ class UDPServer(asyncio.DatagramProtocol):
 
         Where:
             id: Device ID (1-4)
-            t: timestamp
             ax: x-axis acceleration
             ay: y-axis acceleration
             az: z-axis acceleration
+            gx: x-axis gyro
+            gy: y-axis gyro
+            gz: z-axis gyro
+
+
+        Hello rory if you ever see this :P
     """
 
     def datagram_received(self, data, addr):
@@ -37,7 +43,7 @@ async def main():
     loop = asyncio.get_running_loop()
     transport, protocol = await loop.create_datagram_endpoint(
         UDPServer,
-        local_addr=('0.0.0.0', 5005)
+        local_addr=('0.0.0.0', UDP_PORT)
     )
     print("Server Starting")
     await asyncio.Future()  # run forever
