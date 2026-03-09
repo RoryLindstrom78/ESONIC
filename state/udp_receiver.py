@@ -4,8 +4,13 @@ import asyncio      # For concurrency
 import time
 import math
 import queue
+import device_manager
+import device_state
+
 
 UDP_PORT = 5005
+
+device = device_manager.DeviceManager()
 
 class UDPServer(asyncio.DatagramProtocol):
     """
@@ -36,8 +41,21 @@ class UDPServer(asyncio.DatagramProtocol):
     """
 
     def datagram_received(self, data, addr):
-        message = json.loads(data.decode())
-        print(message)
+        try:
+            message = json.loads(data.decode())
+
+            device.new_glove_data(
+                message["id"],
+                message["ax"],
+                message["ay"],
+                message["az"]
+            )
+
+            if device.state == device_state.InstrumentState.INIT:
+                device.new_state(device_state.InstrumentState.MOVEMENT)
+
+        except Exception as e:
+            print("Bad packet:", e)
 
 async def main():
     loop = asyncio.get_running_loop()
@@ -46,6 +64,9 @@ async def main():
         local_addr=('0.0.0.0', UDP_PORT)
     )
     print("Server Starting")
+    
+    # Start the angle monitoring loop
+    asyncio.create_task(device.monitor_state())
     await asyncio.Future()  # run forever
 
 asyncio.run(main())
