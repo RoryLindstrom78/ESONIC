@@ -17,6 +17,14 @@ class UDPServer(asyncio.DatagramProtocol):
         UDP Server running that will receive ESP32 data.
         Data should be sent as JSON in the following format:
 
+        CORRESPONDING HANDS:
+        - id 1 is person 1 left hand
+        - id 2 is person 2 right hand
+        - id 3 is person 1 right hand
+        - id 4 is person 2 left hand
+
+        LEFT HAND PERSON 1 JSON:
+
         {
             "id": 1,
             "ax": 0.12,
@@ -24,7 +32,59 @@ class UDPServer(asyncio.DatagramProtocol):
             "az": 9.81,
             "gx": 0,
             "gy": 0,
-            "gz": 0
+            "gz": 0,
+            "pinkyL" : 0,
+            "ringL" : 0, 
+            "middleL" : 0,
+            "indexL" : 0 
+        }
+
+        RIGHT HAND PERSON 2 JSON:
+
+        {
+            "id": 2,
+            "ax": 0.12,
+            "ay": -0.87,
+            "az": 9.81,
+            "gx": 0,
+            "gy": 0,
+            "gz": 0,
+            "pinkyR" : 0,
+            "ringR" : 0, 
+            "middleR" : 0,
+            "indexR" : 0 
+        }
+
+        RIGHT HAND PERSON 1 JSON:
+
+        {
+            "id": 3,
+            "ax": 0.12,
+            "ay": -0.87,
+            "az": 9.81,
+            "gx": 0,
+            "gy": 0,
+            "gz": 0,
+            "pinkyL" : 0,
+            "ringL" : 0, 
+            "middleL" : 0,
+            "indexL" : 0 
+        }
+
+        LEFT HAND PERSON 2 JSON:
+
+        {
+            "id": 4,
+            "ax": 0.12,
+            "ay": -0.87,
+            "az": 9.81,
+            "gx": 0,
+            "gy": 0,
+            "gz": 0,
+            "pinkyR" : 0,
+            "ringR" : 0, 
+            "middleR" : 0,
+            "indexR" : 0 
         }
 
         Where:
