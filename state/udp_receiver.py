@@ -126,6 +126,7 @@ async def main():
     print("Server Starting")
     
     # Start the angle monitoring loop
+    await device.start()
     asyncio.create_task(device.monitor_state())
     await asyncio.Future()  # run forever
 

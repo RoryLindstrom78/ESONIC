@@ -1,20 +1,30 @@
 import mido
+import asyncio
 
 class ContinuousMIDIController:
-    def __init__(self, port_name, min_val=-180, max_val=180, scale=None):
+    def __init__(self, port_name, arpeg_port_name, min_val=-180, max_val=180, scale=None):
         self.min_val = min_val # minimum angle value expected (e.g., -180 degrees)
         self.max_val = max_val # maximum angle value expected (e.g., 180 degrees)
 
         # defaults to the C major scale if a scale is not provided
-        self.scale = scale if scale is not None else [60, 62, 64, 65, 67, 69, 71, 72] 
+        self.scale = scale if scale is not None else [36, 38, 40, 41, 43, 45, 47, 48] 
         
         self.port_name = port_name
         self.port = None
+
+        self.arpeg_port_name = arpeg_port_name
+        self.arpeg_port = None
         
         # has the current note so it can sustain it until the next change
         self.current_note = None 
+
+        self.arpeggio_intervals = [12, 16, 19, 23]  # 1-3-5-7
+        self.arpeggio_task = None
         
         self._connect_midi()
+    
+    def build_arpeggio(self, root):
+        return [root + interval for interval in self.arpeggio_intervals]
 
     def _connect_midi(self):
         """
@@ -23,8 +33,11 @@ class ContinuousMIDIController:
         try:
             self.port = mido.open_output(self.port_name)
             print(f"[{self.port_name}] Successfully connected!")
+            self.arpeg_port = mido.open_output(self.arpeg_port_name)
+            print(f"[{self.arpeg_port_name}] Successfully connected!")
         except OSError:
             print(f"[{self.port_name}] ERROR: Could not find port.")
+            print(f"[{self.arpeg_port_name}] ERROR: Could not find port.")
 
     def value_to_note(self, value):
         """
@@ -67,6 +80,28 @@ class ContinuousMIDIController:
             # updates note
             self.current_note = new_note
 
+    async def update_arpeggio(self, bpm=120):
+        """
+        Continuously plays an arpeggio based on the current note.
+        """
+
+        if not self.arpeg_port:
+            return
+
+        beat_time = 60 / bpm
+
+        while True:
+            if self.current_note is None:
+                await asyncio.sleep(0.01)
+                continue
+
+            notes = self.build_arpeggio(self.current_note)
+
+            for note in notes:
+                self.arpeg_port.send(mido.Message('note_on', note=note, velocity=100))
+                await asyncio.sleep(beat_time / 2)
+                self.arpeg_port.send(mido.Message('note_off', note=note, velocity=0))
+
     def stop_all(self):
         """
         Stops the note that is currently playing so it doesn't drone forever
@@ -74,6 +109,7 @@ class ContinuousMIDIController:
         
         if self.current_note is not None and self.port:
             self.port.send(mido.Message('note_off', note=self.current_note, velocity=0))
+            self.arpeg_port.send(mido.Message('note_off', note=self.current_note, velocity=0))
             self.current_note = None
             
     def close(self):

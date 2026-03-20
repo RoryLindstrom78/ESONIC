@@ -18,9 +18,10 @@ class DeviceManager:
 
         # Audio
         self.audio = True # Defaults to true, can be set to false for testing without MIDI controller
-        self.scale = [60, 62, 64, 65, 67, 69, 71, 72]
+        self.scale = [48, 50, 52, 53, 55, 57, 59, 60]
         self.PORT_NAME = 'PythonMIDI 1'
-        self.midi_controller = audio.ContinuousMIDIController(port_name=self.PORT_NAME, min_val=-180, max_val=180, scale=self.scale)
+        self.ARPEG_PORT_NAME = 'PythonMIDI2 2'
+        self.midi_controller = audio.ContinuousMIDIController(port_name=self.PORT_NAME, arpeg_port_name=self.ARPEG_PORT_NAME, min_val=-180, max_val=180, scale=self.scale)
 
         # Gloves (just constructed as a list of GloveManagers)
         self.gloves = {i: glove_manager.GloveManager() for i in range(4)}
@@ -28,6 +29,9 @@ class DeviceManager:
         # angle calculations dependent on this semaphore. We only calculate when we release it.
         self._angle_semaphore = asyncio.Semaphore(0)
 
+    async def start(self):
+        asyncio.create_task(self.midi_controller.update_arpeggio())
+    
     def new_state(self, new_state):
         """
         Docstring for new_state
