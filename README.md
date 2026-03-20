@@ -58,3 +58,10 @@ pip install mido python-rtmidi
 
 
 Hey Marcos if you wanna help out with the software stuff you can help me out with all this while Leslie and Natalie are setting up the hardware. 
+
+# Git commands to know
+
+- "git add ." adds everything that's been changed
+- "git commit -m "message" commits your changes
+- "git push" pushes your changes to github
+- "git pull" pulls changes from github (sometimes you have to resolve merge conflicts but I don't think we'll run into that issue for this project)
