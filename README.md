@@ -8,8 +8,6 @@ You'll have to set up the virtual environment yourself if you don't know how jus
 
 Here's the basic file layout:
 
-<<<<<<< HEAD
-=======
 ### Audio:
 This class basically takes in the angle and converts it into a note that is outputted from a connected DAW(Digital Audio Workstation eg. Garage Band/FL Studio). It uses the library mido.
 
@@ -42,7 +40,6 @@ Setup:
         - Works now like any traditional MIDI input
         - Open Channel Rack and add instruments
 
->>>>>>> 4033f2e63c3755690bc4bae040d130392edf8aee
 ### Network:
 This will be for receiving the data sent by our ESP32s. Right now I have it set up as a UDP server running asynchronously and expects the files in JSON format. If its different I can reconfigure it but this seems to work pretty well. 
 
@@ -55,11 +52,7 @@ All I have in this right now is a basic enum class representing the different st
 ### Testing:
 I'm just simulating sending the UDP server data here since we don't have the ESP32s set up yet.
 
-<<<<<<< HEAD
-=======
 # Commands to run:
 pip install mido python-rtmidi
 
->>>>>>> 4033f2e63c3755690bc4bae040d130392edf8aee
 Hey Marcos if you wanna help out with the software stuff you can help me out with all this while Leslie and Natalie are setting up the hardware. 
-
