@@ -52,7 +52,9 @@ All I have in this right now is a basic enum class representing the different st
 ### Testing:
 I'm just simulating sending the UDP server data here since we don't have the ESP32s set up yet.
 
-# Commands to run:
+### Commands to run:
 pip install mido python-rtmidi
+
+
 
 Hey Marcos if you wanna help out with the software stuff you can help me out with all this while Leslie and Natalie are setting up the hardware. 
