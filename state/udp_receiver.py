@@ -6,6 +6,10 @@ import math
 import queue
 import device_manager
 import device_state
+<<<<<<< HEAD
+=======
+import audio
+>>>>>>> 4033f2e63c3755690bc4bae040d130392edf8aee
 
 
 UDP_PORT = 5005
@@ -43,6 +47,10 @@ class UDPServer(asyncio.DatagramProtocol):
     def datagram_received(self, data, addr):
         try:
             message = json.loads(data.decode())
+<<<<<<< HEAD
+=======
+            print(f"Got data from ID: {message['id']}") # <--- ADD THIS LINE
+>>>>>>> 4033f2e63c3755690bc4bae040d130392edf8aee
 
             device.new_glove_data(
                 message["id"],
