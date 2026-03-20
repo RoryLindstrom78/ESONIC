@@ -1,0 +1,76 @@
+import device_state
+import asyncio
+import glove_manager
+import math
+
+class DeviceManager:
+    """
+    DeviceManager: Handles state, IO updates, and angle calculations
+
+    :param glove1-glove4: glove_manager objects encapsulating glove data (ax, ay, az, button responses)
+    :param _angle_semaphore: handles checking whether or not we should calculate angles. Probably over engineered but prevents busy waiting
+
+    """
+    def __init__(self):
+        self.state = device_state.InstrumentState.INIT
+        # Gloves (just constructed as a list of GloveManagers)
+        self.gloves = {i: glove_manager.GloveManager() for i in range(4)}
+
+        # angle calculations dependent on this semaphore. We only calculate when we release it.
+        self._angle_semaphore = asyncio.Semaphore(0)
+
+    def new_state(self, new_state):
+        """
+        Docstring for new_state
+        
+        :param new_state: new state we would like to update DeviceManager to
+        """
+
+        # Triggers angle calculation loop
+        if new_state == device_state.InstrumentState.MOVEMENT and self.state != device_state.InstrumentState.MOVEMENT:
+            self._angle_semaphore.release()
+        
+        # Regardless we update the state
+        self.state = new_state
+
+
+    async def monitor_state(self):
+        """
+        Continuously runs, checks if in movement state for angle calculations without busy waiting.
+        """
+        while True:
+            # Wait until there's at least one "ticket"
+            await self._angle_semaphore.acquire()
+            # Continuously calculate angle while in "MOVEMENT" state
+            while self.state == device_state.InstrumentState.MOVEMENT:
+                self.calculate_angle()
+                await asyncio.sleep(0.01) # slight delay between calculations
+
+    def calculate_angle(self):
+        # Gonna test by calculating angle between gloves id 1 and id 2 for now
+        g0 = self.gloves[0]
+        g1 = self.gloves[1]
+
+        # Compute forward tilt for g0
+        mag0 = (g0.ax * g0.ax + g0.ay * g0.ay + g0.az * g0.az) ** 0.5
+        # Compute forward tilt for g1
+        mag1 = (g1.ax * g1.ax + g1.ay * g1.ay + g1.az * g1.az) ** 0.5
+        
+        # Prevent divide by zero error
+        if (mag0 == 0 or mag1 == 0):
+            return None
+        
+        # Compute tilt
+        tilt0 = math.atan2(g0.az / mag0, g0.ax / mag0)
+        tilt1 = math.atan2(g1.az / mag1, g1.ax / mag1)
+
+        # Compute angle
+        angle = tilt0 - tilt1
+        angle = math.degrees(angle)
+        print("Angle: ", angle)
+
+        return angle
+
+
+    def new_glove_data(self, gloveID, ax, ay, az):
+        self.gloves[gloveID - 1].update_data(ax, ay, az)
