@@ -69,7 +69,13 @@ async def main():
     asyncio.create_task(device.monitor_state())
     await asyncio.Future()  # run forever
 
-asyncio.run(main())
+
+try:
+    asyncio.run(main())
+except KeyboardInterrupt:
+    device.midi_controller.close()
+    print("\nShutting down server...")
+
 
 
 

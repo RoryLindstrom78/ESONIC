@@ -2,7 +2,10 @@ import device_state
 import asyncio
 import glove_manager
 import math
+import audio
 
+scale = [60, 62, 64, 65, 67, 69, 71, 72] # C major scale as default
+PORT_NAME = 'PythonMIDI 1' # includes a 1 at the end 
 class DeviceManager:
     """
     DeviceManager: Handles state, IO updates, and angle calculations
@@ -11,8 +14,12 @@ class DeviceManager:
     :param _angle_semaphore: handles checking whether or not we should calculate angles. Probably over engineered but prevents busy waiting
 
     """
+
     def __init__(self):
         self.state = device_state.InstrumentState.INIT
+        self.audio = True # Defaults to true, can be set to false for testing without MIDI controller
+        self.midi_controller = audio.ContinuousMIDIController(port_name=PORT_NAME, min_val=-180, max_val=180, scale=scale)
+
         # Gloves (just constructed as a list of GloveManagers)
         self.gloves = {i: glove_manager.GloveManager() for i in range(4)}
 
@@ -43,8 +50,16 @@ class DeviceManager:
             await self._angle_semaphore.acquire()
             # Continuously calculate angle while in "MOVEMENT" state
             while self.state == device_state.InstrumentState.MOVEMENT:
-                self.calculate_angle()
-                await asyncio.sleep(0.01) # slight delay between calculations
+                try:
+                    angle = self.calculate_angle()
+                    if self.audio and angle is not None:
+                        self.midi_controller.update(angle)
+                    await asyncio.sleep(0.01) # slight delay between calculations
+                except KeyboardInterrupt:
+                    print("\nStopping angle monitoring...")
+                    self.midi_controller.close()
+                    return
+                
 
     def calculate_angle(self):
         # Gonna test by calculating angle between gloves id 1 and id 2 for now
