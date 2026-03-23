@@ -1,0 +1,179 @@
+//Left Hand Button code
+/* Implementation of Player 1 Left Hand Buttons (1 ESP per 1 Hand)
+*/
+
+//Reminder: dont forget MPU pins, change button pins as needed
+//Left Hand Pins:
+const int indexL_buttonPIN = 14 ;
+const int middleL_buttonPIN = 27;
+const int ringL_buttonPIN =26 ;
+const int pinkyL_buttonPIN = 25;
+
+//State parameters for Index Button
+int indexL_buttonState = 0;
+int indexL_lastState = LOW;
+int indexL_pushed = LOW;
+
+//State parameters for Middle Button
+int middleL_buttonState = 0;
+int middleL_lastState = LOW;
+int middleL_pushed = LOW;
+
+//State parameters for Ring Button
+int ringL_buttonState = 0;
+int ringL_lastState = LOW;
+int ringL_pushed = LOW;
+
+//State parameters for Ring Button
+int pinkyL_buttonState = 0;
+int pinkyL_lastState = LOW;
+int pinkyL_pushed = LOW;
+
+void indexL(int indxLPIN){
+  //read button state
+  indexL_buttonState = digitalRead(indexL_buttonPIN);
+
+  //catch button press (when digital read HIGH)
+  if(indexL_buttonState == HIGH){
+    Serial.println("Left Index Button Pressed!");
+    indexL_pushed = !indexL_pushed;
+    delay(50);
+  }
+
+  //0 to 1 state
+  //check button is pressed == 1 and program is in 0 state
+  if(indexL_pushed == HIGH && indexL_lastState == LOW){
+  Serial.println("Index L 1 State");
+    indexL_lastState = HIGH; //set last state to HIGH
+    delay(100); //delay
+  }
+  //1 to 0 state
+  //check button is pressed ==1 and progam is in 1 state
+  else if(indexL_buttonState == HIGH && indexL_lastState == HIGH){
+    Serial.println("Index L 0 State");
+    indexL_lastState = LOW; //set last state to LOW
+    delay(100);
+  }
+  //print current state
+  Serial.print("Index L State:");
+  Serial.println(indexL_lastState);
+  //Serial.println(" ");
+}
+
+//function that handles Middle Left button data
+void middleL(int middleLPIN){
+  //read Middle Left button state
+  middleL_buttonState = digitalRead(middleL_buttonPIN);
+
+  //catch button press (when digital read HIGH)
+  if(middleL_buttonState == HIGH){
+    Serial.println("Left Middle Button Pressed!");
+    middleL_pushed = !middleL_pushed;
+    delay(50);
+  }
+
+  //0 to 1 state
+  //check button is pressed == 1 and program is in 0 state
+  if(middleL_pushed == HIGH && middleL_lastState == LOW){
+  Serial.println("Middle L 1 State");
+    middleL_lastState = HIGH; //set last state to HIGH
+    delay(100); //delay
+  }
+  //1 to 0 state
+  //check button is pressed ==1 and progam is in 1 state
+  else if(middleL_buttonState == HIGH && middleL_lastState == HIGH){
+    Serial.println("Middle L 0 State");
+    middleL_lastState = LOW; //set last state to LOW
+    delay(100);
+  }
+  //print current state
+  Serial.print("Middle L State:");
+  Serial.println(middleL_lastState);
+  //Serial.println(" ");
+}
+
+//function that handles Middle Left button data
+void ringL(int ringLPIN){
+  //read Middle Left button state
+  ringL_buttonState = digitalRead(ringL_buttonPIN);
+
+  //catch button press (when digital read HIGH)
+  if(ringL_buttonState == HIGH){
+    Serial.println("Left Ring Button Pressed!");
+    ringL_pushed = !ringL_pushed;
+    delay(50);
+  }
+
+  //0 to 1 state
+  //check button is pressed == 1 and program is in 0 state
+  if(ringL_pushed == HIGH && ringL_lastState == LOW){
+  Serial.println("Ring L 1 State");
+    ringL_lastState = HIGH; //set last state to HIGH
+    delay(100); //delay
+  }
+  //1 to 0 state
+  //check button is pressed ==1 and progam is in 1 state
+  else if(ringL_buttonState == HIGH && ringL_lastState == HIGH){
+    Serial.println("Ring L 0 State");
+    ringL_lastState = LOW; //set last state to LOW
+    delay(100);
+  }
+  //print current state
+  Serial.print("Ring L State:");
+  Serial.println(ringL_lastState);
+  //Serial.println(" ");
+}
+
+//function that handles Pinky Left button data
+void pinkyL(int pinkyLPIN){
+  //read Pinky Left button state
+  pinkyL_buttonState = digitalRead(pinkyL_buttonPIN);
+
+  //catch button press (when digital read HIGH)
+  if(pinkyL_buttonState == HIGH){
+    Serial.println("Left Pinky Button Pressed!");
+    pinkyL_pushed = !pinkyL_pushed;
+    delay(50);
+  }
+
+  //0 to 1 state
+  //check button is pressed == 1 and program is in 0 state
+  if(pinkyL_pushed == HIGH && pinkyL_lastState == LOW){
+  Serial.println("Pinky L 1 State");
+    pinkyL_lastState = HIGH; //set last state to HIGH
+    delay(100); //delay
+  }
+  //1 to 0 state
+  //check button is pressed ==1 and progam is in 1 state
+  else if(pinkyL_buttonState == HIGH && pinkyL_lastState == HIGH){
+    Serial.println("Pinky L 0 State");
+    pinkyL_lastState = LOW; //set last state to LOW
+    delay(100);
+  }
+  //print current state
+  Serial.print("Pinky L State:");
+  Serial.println(pinkyL_lastState);
+  Serial.println(" ");
+}
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+
+  // **Note: make sure pinModes are INPUT_PULLDOWN (default/initial state = 0)
+  //Initialize Left Hand Pinmodes:
+  pinMode(indexL_buttonPIN, INPUT_PULLDOWN);  //L index button
+  pinMode(middleL_buttonPIN, INPUT_PULLDOWN); //L middle button
+  pinMode(ringL_buttonPIN, INPUT_PULLDOWN);   //L ring button
+  pinMode(pinkyL_buttonPIN, INPUT_PULLDOWN);  //L pinky button
+
+}
+
+void loop() {
+  // call button functions for each button
+  indexL(indexL_buttonPIN);
+  middleL(middleL_buttonPIN);
+  ringL(ringL_buttonPIN);
+  pinkyL(pinkyL_buttonPIN);
+  
+  delay(200);  
+}
