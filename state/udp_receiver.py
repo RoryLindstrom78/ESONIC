@@ -20,71 +20,22 @@ class UDPServer(asyncio.DatagramProtocol):
         CORRESPONDING HANDS:
         - id 1 is person 1 left hand
         - id 2 is person 2 right hand
-        - id 3 is person 1 right hand
-        - id 4 is person 2 left hand
+        - id 3 is person 2 left hand
+        - id 4 is person 1 right hand
 
-        LEFT HAND PERSON 1 JSON:
-
+        ANY HAND OF ANY PERSON:
         {
-            "id": 1,
+            "id": 1,    // changes per person/hand
             "ax": 0.12,
             "ay": -0.87,
             "az": 9.81,
             "gx": 0,
             "gy": 0,
             "gz": 0,
-            "pinkyL" : 0,
-            "ringL" : 0, 
-            "middleL" : 0,
-            "indexL" : 0 
-        }
-
-        RIGHT HAND PERSON 2 JSON:
-
-        {
-            "id": 2,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyR" : 0,
-            "ringR" : 0, 
-            "middleR" : 0,
-            "indexR" : 0 
-        }
-
-        RIGHT HAND PERSON 1 JSON:
-
-        {
-            "id": 3,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyL" : 0,
-            "ringL" : 0, 
-            "middleL" : 0,
-            "indexL" : 0 
-        }
-
-        LEFT HAND PERSON 2 JSON:
-
-        {
-            "id": 4,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyR" : 0,
-            "ringR" : 0, 
-            "middleR" : 0,
-            "indexR" : 0 
+            "index" : 0,
+            "middle" : 0, 
+            "ring" : 0,
+            "pinky" : 0 
         }
 
         Where:
@@ -95,9 +46,10 @@ class UDPServer(asyncio.DatagramProtocol):
             gx: x-axis gyro
             gy: y-axis gyro
             gz: z-axis gyro
-
-
-        Hello rory if you ever see this :P
+            index:  index button
+            middle: middle button
+            ring:   ring button
+            pinky:  pinky button
     """
 
     def datagram_received(self, data, addr):
