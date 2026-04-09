@@ -4,6 +4,7 @@ import glove_manager
 import math
 import audio
 
+
 class DeviceManager:
     """
     DeviceManager: Handles state, IO updates, and angle calculations
@@ -18,10 +19,12 @@ class DeviceManager:
 
         # Audio
         self.audio = True # Defaults to true, can be set to false for testing without MIDI controller
-        self.scale = [48, 50, 52, 53, 55, 57, 59, 60]
+        #self.scale = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59]
+        self.scale = [36, 38, 40, 41, 43, 45, 47, 48]
         self.PORT_NAME = 'PythonMIDI 1'
         self.ARPEG_PORT_NAME = 'PythonMIDI2 2'
-        self.midi_controller = audio.ContinuousMIDIController(port_name=self.PORT_NAME, arpeg_port_name=self.ARPEG_PORT_NAME, min_val=-180, max_val=180, scale=self.scale)
+        self.BUTTON_PORT_NAME = 'PythonMIDI3 3'
+        self.midi_controller = audio.ContinuousMIDIController(port_name=self.PORT_NAME, arpeg_port_name=self.ARPEG_PORT_NAME, button_port_name=self.BUTTON_PORT_NAME, min_val=-180, max_val=180, scale=self.scale)
 
         # Gloves (just constructed as a list of GloveManagers)
         self.gloves = {i: glove_manager.GloveManager() for i in range(4)}
@@ -31,6 +34,7 @@ class DeviceManager:
 
     async def start(self):
         asyncio.create_task(self.midi_controller.update_arpeggio())
+
     
     def new_state(self, new_state):
         """
@@ -54,11 +58,28 @@ class DeviceManager:
         while True:
             # Wait until there's at least one "ticket"
             await self._angle_semaphore.acquire()
-            # Continuously calculate angle while in "MOVEMENT" state
+
             while self.state == device_state.InstrumentState.MOVEMENT:
                 angle = self.calculate_angle()
                 if self.audio and angle is not None:
                     self.midi_controller.update(angle)
+
+                for i in range(len(self.gloves)):
+                    glove = self.gloves[i]
+                    button_states = glove.check_buttons()
+                    for j in range(3):
+
+                        if button_states[j] == 1:
+                            if (glove.prev_buttons[j] == 1):
+                                continue
+                            glove.prev_buttons[j] = 1
+                            self.midi_controller.play_button_note_on(glove_id=i+1, note=j)
+                        else:
+                            if (glove.prev_buttons[j] == 0):
+                                continue
+                            glove.prev_buttons[j] = 0
+                            self.midi_controller.play_button_note_off(glove_id=i+1, note=j)
+
                 await asyncio.sleep(0.01) # slight delay between calculations
                 
 
@@ -83,10 +104,10 @@ class DeviceManager:
         # Compute angle
         angle = tilt0 - tilt1
         angle = math.degrees(angle)
-        print("Angle: ", angle)
+        #print("Angle: ", angle)
 
         return angle
 
 
-    def new_glove_data(self, gloveID, ax, ay, az):
-        self.gloves[gloveID - 1].update_data(ax, ay, az)
+    def new_glove_data(self, gloveID, ax, ay, az, pinky, ring, middle, index):
+        self.gloves[gloveID - 1].update_data(ax, ay, az, pinky, ring, middle, index)

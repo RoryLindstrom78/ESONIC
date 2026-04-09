@@ -1,145 +1,115 @@
-import socket       # For transfer over udp 
-import json         # For processing accelerometer data
-import asyncio      # For concurrency 
-import time
-import math
-import queue
+import json
+import asyncio
+import serial_asyncio
 import device_manager
 import device_state
 
 
-UDP_PORT = 5005
+# ============================================================
+# Device setup
+# ============================================================
 
 device = device_manager.DeviceManager()
 
-class UDPServer(asyncio.DatagramProtocol):
+
+# ============================================================
+# UDPServer (NOW SERIAL, NAME KEPT FOR COMPATIBILITY)
+# ============================================================
+
+class UDPServer(asyncio.Protocol):
     """
-        UDP Server running that will receive ESP32 data.
-        Data should be sent as JSON in the following format:
+    NOTE:
+    Class name preserved so existing code does not break.
 
-        CORRESPONDING HANDS:
-        - id 1 is person 1 left hand
-        - id 2 is person 2 right hand
-        - id 3 is person 1 right hand
-        - id 4 is person 2 left hand
-
-        LEFT HAND PERSON 1 JSON:
-
-        {
-            "id": 1,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyL" : 0,
-            "ringL" : 0, 
-            "middleL" : 0,
-            "indexL" : 0 
-        }
-
-        RIGHT HAND PERSON 2 JSON:
-
-        {
-            "id": 2,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyR" : 0,
-            "ringR" : 0, 
-            "middleR" : 0,
-            "indexR" : 0 
-        }
-
-        RIGHT HAND PERSON 1 JSON:
-
-        {
-            "id": 3,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyL" : 0,
-            "ringL" : 0, 
-            "middleL" : 0,
-            "indexL" : 0 
-        }
-
-        LEFT HAND PERSON 2 JSON:
-
-        {
-            "id": 4,
-            "ax": 0.12,
-            "ay": -0.87,
-            "az": 9.81,
-            "gx": 0,
-            "gy": 0,
-            "gz": 0,
-            "pinkyR" : 0,
-            "ringR" : 0, 
-            "middleR" : 0,
-            "indexR" : 0 
-        }
-
-        Where:
-            id: Device ID (1-4)
-            ax: x-axis acceleration
-            ay: y-axis acceleration
-            az: z-axis acceleration
-            gx: x-axis gyro
-            gy: y-axis gyro
-            gz: z-axis gyro
-
-
-        Hello rory if you ever see this :P
+    This now handles SERIAL input instead of UDP.
+    Each ESP32 must send newline-delimited JSON.
     """
 
-    def datagram_received(self, data, addr):
+    def __init__(self, port_name: str):
+        self.port_name = port_name
+        self.buffer = ""
+
+    # Serial connection opened
+    def connection_made(self, transport):
+        self.transport = transport
+        print(f"[INFO] Connected to {self.port_name}")
+
+    # Data received from serial port
+    def data_received(self, data: bytes):
+        self.buffer += data.decode(errors="ignore")
+
+        # Serial is a stream → split by newline
+        while "\n" in self.buffer:
+            line, self.buffer = self.buffer.split("\n", 1)
+            line = line.strip()
+
+            if line:
+                self.handle_message(line)
+
+    # Same logic you previously had in datagram_received
+    def handle_message(self, line: str):
         try:
-            message = json.loads(data.decode())
+            message = json.loads(line)
 
             device.new_glove_data(
                 message["id"],
                 message["ax"],
                 message["ay"],
-                message["az"]
+                message["az"],
+                message["pinky"],
+                message["ring"],
+                message["middle"],
+                message["index"]
             )
 
             if device.state == device_state.InstrumentState.INIT:
                 device.new_state(device_state.InstrumentState.MOVEMENT)
 
         except Exception as e:
-            print("Bad packet:", e)
+            print(f"[{self.port_name}] Bad packet:", e)
+            print(f"[{self.port_name}] Raw:", line)
+
+    def connection_lost(self, exc):
+        print(f"[INFO] Disconnected from {self.port_name}")
+
+
+# ============================================================
+# Main Async Entry Point
+# ============================================================
 
 async def main():
     loop = asyncio.get_running_loop()
-    transport, protocol = await loop.create_datagram_endpoint(
-        UDPServer,
-        local_addr=('0.0.0.0', UDP_PORT)
+
+    print("[INFO] Starting serial receivers...")
+
+    # ESP32 #1 → COM3
+    await serial_asyncio.create_serial_connection(
+        loop,
+        lambda: UDPServer("COM3"),
+        "COM3",
+        baudrate=115200
     )
-    print("Server Starting")
-    
-    # Start the angle monitoring loop
+
+
+
+    print("[INFO] Serial connections established")
+
+    # Start device logic
     await device.start()
     asyncio.create_task(device.monitor_state())
-    await asyncio.Future()  # run forever
 
+    print("[INFO] Device monitoring started")
+
+    # Run forever
+    await asyncio.Future()
+
+
+# ============================================================
+# Program Runner
+# ============================================================
 
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
+    print("\n[INFO] Shutting down...")
     device.midi_controller.close()
-    print("\nShutting down server...")
-
-
-
-
-
-
-

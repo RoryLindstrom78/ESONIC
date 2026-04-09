@@ -1,19 +1,26 @@
-import mido
 import asyncio
+import mido
+
 
 class ContinuousMIDIController:
-    def __init__(self, port_name, arpeg_port_name, min_val=-180, max_val=180, scale=None):
+    def __init__(self, port_name, arpeg_port_name, button_port_name, min_val=-180, max_val=180, scale=None):
         self.min_val = min_val # minimum angle value expected (e.g., -180 degrees)
         self.max_val = max_val # maximum angle value expected (e.g., 180 degrees)
 
         # defaults to the C major scale if a scale is not provided
         self.scale = scale if scale is not None else [36, 38, 40, 41, 43, 45, 47, 48] 
+
+        # notes for the buttons 
+        self.button_scale_intervals = [12, 14, 16, 19, 21, 23]
         
         self.port_name = port_name
         self.port = None
 
         self.arpeg_port_name = arpeg_port_name
         self.arpeg_port = None
+
+        self.button_port_name = button_port_name
+        self.button_port = None
         
         # has the current note so it can sustain it until the next change
         self.current_note = None 
@@ -25,6 +32,9 @@ class ContinuousMIDIController:
     
     def build_arpeggio(self, root):
         return [root + interval for interval in self.arpeggio_intervals]
+    
+    def build_button_notes(self, root):
+        return [root + interval for interval in self.button_scale_intervals]
 
     def _connect_midi(self):
         """
@@ -35,9 +45,12 @@ class ContinuousMIDIController:
             print(f"[{self.port_name}] Successfully connected!")
             self.arpeg_port = mido.open_output(self.arpeg_port_name)
             print(f"[{self.arpeg_port_name}] Successfully connected!")
+            self.button_port = mido.open_output(self.button_port_name)
+            print(f"[{self.button_port_name}] Successfully connected!")
         except OSError:
             print(f"[{self.port_name}] ERROR: Could not find port.")
             print(f"[{self.arpeg_port_name}] ERROR: Could not find port.")
+            print(f"[{self.button_port_name}] ERROR: Could not find port.")
 
     def value_to_note(self, value):
         """
@@ -88,7 +101,7 @@ class ContinuousMIDIController:
         if not self.arpeg_port:
             return
 
-        beat_time = 60 / bpm
+        beat_time = 10 / bpm
 
         while True:
             if self.current_note is None:
@@ -101,6 +114,41 @@ class ContinuousMIDIController:
                 self.arpeg_port.send(mido.Message('note_on', note=note, velocity=100))
                 await asyncio.sleep(beat_time / 2)
                 self.arpeg_port.send(mido.Message('note_off', note=note, velocity=0))
+
+    def play_button_note_on(self, glove_id, note):
+
+        if not self.button_port:
+            return
+        
+        if self.current_note is None:
+            return
+
+        button_notes = self.build_button_notes(self.current_note)
+
+        if (glove_id == 1 or glove_id == 4):
+            # First three notes of scale
+            self.button_port.send(mido.Message('note_on', note=button_notes[note], velocity=100))
+        else:
+            # Last three notes of scale
+            self.button_port.send(mido.Message('note_on', note=button_notes[note + 3], velocity=100))
+
+    def play_button_note_off(self, glove_id, note):
+        if not self.button_port:
+            return
+        
+        if self.current_note is None:
+            return
+
+        button_notes = self.build_button_notes(self.current_note)
+
+        if (glove_id == 1 or glove_id == 4):
+            # First three notes of scale
+            self.button_port.send(mido.Message('note_off', note=button_notes[note], velocity=0))
+        else:
+            # Last three notes of scale
+            self.button_port.send(mido.Message('note_off', note=button_notes[note + 3], velocity=0))
+
+
 
     def stop_all(self):
         """
