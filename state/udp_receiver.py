@@ -21,8 +21,44 @@ class UDPServer(asyncio.Protocol):
     NOTE:
     Class name preserved so existing code does not break.
 
+<<<<<<< HEAD
     This now handles SERIAL input instead of UDP.
     Each ESP32 must send newline-delimited JSON.
+=======
+        CORRESPONDING HANDS:
+        - id 1 is person 1 left hand
+        - id 2 is person 2 right hand
+        - id 3 is person 2 left hand
+        - id 4 is person 1 right hand
+
+        ANY HAND OF ANY PERSON:
+        {
+            "id": 1,    // changes per person/hand
+            "ax": 0.12,
+            "ay": -0.87,
+            "az": 9.81,
+            "gx": 0,
+            "gy": 0,
+            "gz": 0,
+            "index" : 0,
+            "middle" : 0, 
+            "ring" : 0,
+            "pinky" : 0 
+        }
+
+        Where:
+            id: Device ID (1-4)
+            ax: x-axis acceleration
+            ay: y-axis acceleration
+            az: z-axis acceleration
+            gx: x-axis gyro
+            gy: y-axis gyro
+            gz: z-axis gyro
+            index:  index button
+            middle: middle button
+            ring:   ring button
+            pinky:  pinky button
+>>>>>>> 8048c46a5d35b984e72a3259b8802b21f76992c2
     """
 
     def __init__(self, port_name: str):
