@@ -12,6 +12,8 @@ class ContinuousMIDIController:
 
         # notes for the buttons 
         self.button_scale_intervals = [12, 14, 16, 19, 21, 23]
+        self.prev_button_notes = []
+        self.button_notes = []
         
         self.port_name = port_name
         self.port = None
@@ -77,21 +79,28 @@ class ContinuousMIDIController:
         # checks what note should be played
         new_note = self.value_to_note(value)
 
+        reset_notes = False
+
         # only send MIDI messages if the note has changed
         if new_note != self.current_note:
-            
+            reset_notes = True
             # removes old note
             if self.current_note is not None:
                 self.port.send(mido.Message('note_off', note=self.current_note, velocity=0))
             
             # plays new note
             self.port.send(mido.Message('note_on', note=new_note, velocity=100))
+
+            self.prev_button_notes = self.button_notes
+            self.button_notes = self.build_button_notes(new_note)
             
             # test print confirmation 
             print(f"Input crossed threshold! Value: {value:.1f} -> Playing Note: {new_note}")
             
             # updates note
             self.current_note = new_note
+
+        return reset_notes
 
     async def update_arpeggio(self, bpm=120):
         """
@@ -101,7 +110,7 @@ class ContinuousMIDIController:
         if not self.arpeg_port:
             return
 
-        beat_time = 10 / bpm
+        beat_time = 50 / bpm
 
         while True:
             if self.current_note is None:
@@ -123,14 +132,14 @@ class ContinuousMIDIController:
         if self.current_note is None:
             return
 
-        button_notes = self.build_button_notes(self.current_note)
-
-        if (glove_id == 1 or glove_id == 4):
+        self.button_notes = self.build_button_notes(self.current_note)
+       #if (glove_id == 1 or glove_id == 3): 
+        if (glove_id == 1 or glove_id == 3):
             # First three notes of scale
-            self.button_port.send(mido.Message('note_on', note=button_notes[note], velocity=100))
+            self.button_port.send(mido.Message('note_on', note=self.button_notes[note], velocity=100))
         else:
             # Last three notes of scale
-            self.button_port.send(mido.Message('note_on', note=button_notes[note + 3], velocity=100))
+            self.button_port.send(mido.Message('note_on', note=self.button_notes[note + 3], velocity=100))
 
     def play_button_note_off(self, glove_id, note):
         if not self.button_port:
@@ -139,14 +148,23 @@ class ContinuousMIDIController:
         if self.current_note is None:
             return
 
-        button_notes = self.build_button_notes(self.current_note)
+        self.button_notes = self.build_button_notes(self.current_note)
 
-        if (glove_id == 1 or glove_id == 4):
+        if (glove_id == 1 or glove_id == 3):
             # First three notes of scale
-            self.button_port.send(mido.Message('note_off', note=button_notes[note], velocity=0))
+            self.button_port.send(mido.Message('note_off', note=self.button_notes[note], velocity=0))
         else:
             # Last three notes of scale
-            self.button_port.send(mido.Message('note_off', note=button_notes[note + 3], velocity=0))
+            self.button_port.send(mido.Message('note_off', note=self.button_notes[note + 3], velocity=0))
+
+    def reset_all_buttons(self):
+        if not self.button_port:
+            return
+        
+        for note in self.prev_button_notes:
+            self.button_port.send(mido.Message('note_off', note=note, velocity=0))
+        
+        self.prev_button_notes = []
 
 
 

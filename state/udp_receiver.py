@@ -18,13 +18,9 @@ device = device_manager.DeviceManager()
 
 class UDPServer(asyncio.Protocol):
     """
-    NOTE:
-    Class name preserved so existing code does not break.
+        UDP Server running that will receive ESP32 data.
+        Data should be sent as JSON in the following format:
 
-<<<<<<< HEAD
-    This now handles SERIAL input instead of UDP.
-    Each ESP32 must send newline-delimited JSON.
-=======
         CORRESPONDING HANDS:
         - id 1 is person 1 left hand
         - id 2 is person 2 right hand
@@ -58,7 +54,6 @@ class UDPServer(asyncio.Protocol):
             middle: middle button
             ring:   ring button
             pinky:  pinky button
->>>>>>> 8048c46a5d35b984e72a3259b8802b21f76992c2
     """
 
     def __init__(self, port_name: str):

@@ -24,6 +24,9 @@ class DeviceManager:
         self.PORT_NAME = 'PythonMIDI 1'
         self.ARPEG_PORT_NAME = 'PythonMIDI2 2'
         self.BUTTON_PORT_NAME = 'PythonMIDI3 3'
+
+        self.player_buttons = [False, False, False, False, False, False]
+
         self.midi_controller = audio.ContinuousMIDIController(port_name=self.PORT_NAME, arpeg_port_name=self.ARPEG_PORT_NAME, button_port_name=self.BUTTON_PORT_NAME, min_val=-180, max_val=180, scale=self.scale)
 
         # Gloves (just constructed as a list of GloveManagers)
@@ -62,31 +65,48 @@ class DeviceManager:
             while self.state == device_state.InstrumentState.MOVEMENT:
                 angle = self.calculate_angle()
                 if self.audio and angle is not None:
-                    self.midi_controller.update(angle)
+                    reset = self.midi_controller.update(angle)
+                    if reset:
+                        self.player_buttons = [False, False, False, False, False, False]
+                        for i in range(len(self.gloves)):
+                            glove = self.gloves[i]
+                            for i in range(3):
+                                glove.prev_buttons[i] = 0
+                        self.midi_controller.reset_all_buttons()
 
+                # Check for button state changes
                 for i in range(len(self.gloves)):
+                    first_three = False
+                    if (i == 0 or i == 2): first_three = True
                     glove = self.gloves[i]
                     button_states = glove.check_buttons()
                     for j in range(3):
+                        if (button_states[j] == 1 and glove.prev_buttons[j] == 0) or (button_states[j] == 0 and glove.prev_buttons[j] == 1):
+                            print("CHANGE IN BUTTON STATE FOR BUTTON ", j, " ON GLOVE ", i+1)
+                            # Change in button state
+                            if (button_states[j] == 1): glove.prev_buttons[j] = 1
+                            else: glove.prev_buttons[j] = 0
 
-                        if button_states[j] == 1:
-                            if (glove.prev_buttons[j] == 1):
-                                continue
-                            glove.prev_buttons[j] = 1
-                            self.midi_controller.play_button_note_on(glove_id=i+1, note=j)
-                        else:
-                            if (glove.prev_buttons[j] == 0):
-                                continue
-                            glove.prev_buttons[j] = 0
-                            self.midi_controller.play_button_note_off(glove_id=i+1, note=j)
+                            if first_three:
+                                self.player_buttons[j] = not self.player_buttons[j]
+                                if (self.player_buttons[j]):
+                                    self.midi_controller.play_button_note_on(glove_id=i+1, note=j)
+                                else:
+                                    self.midi_controller.play_button_note_off(glove_id=i+1, note=j)
+                            else:
+                                self.player_buttons[j + 3] = not self.player_buttons[j + 3]
+                                if (self.player_buttons[j + 3]):
+                                    self.midi_controller.play_button_note_on(glove_id=i+1, note=j)
+                                else:
+                                    self.midi_controller.play_button_note_off(glove_id=i+1, note=j)
 
                 await asyncio.sleep(0.01) # slight delay between calculations
                 
 
     def calculate_angle(self):
         # Gonna test by calculating angle between gloves id 1 and id 2 for now
-        g0 = self.gloves[0]
-        g1 = self.gloves[1]
+        g0 = self.gloves[1]
+        g1 = self.gloves[2]
 
         # Compute forward tilt for g0
         mag0 = (g0.ax * g0.ax + g0.ay * g0.ay + g0.az * g0.az) ** 0.5
