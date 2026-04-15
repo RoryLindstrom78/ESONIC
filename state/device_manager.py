@@ -20,7 +20,7 @@ class DeviceManager:
         # Audio
         self.audio = True # Defaults to true, can be set to false for testing without MIDI controller
         #self.scale = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59]
-        self.scale = [36, 38, 40, 41, 43, 45, 47, 48]
+        self.scale = [48, 50, 52, 53, 55, 57]
         self.PORT_NAME = 'PythonMIDI 1'
         self.ARPEG_PORT_NAME = 'PythonMIDI2 2'
         self.BUTTON_PORT_NAME = 'PythonMIDI3 3'
@@ -63,23 +63,28 @@ class DeviceManager:
             await self._angle_semaphore.acquire()
 
             while self.state == device_state.InstrumentState.MOVEMENT:
-                angle = self.calculate_angle()
-                if self.audio and angle is not None:
-                    reset = self.midi_controller.update(angle)
-                    if reset:
-                        self.player_buttons = [False, False, False, False, False, False]
-                        for i in range(len(self.gloves)):
-                            glove = self.gloves[i]
-                            for i in range(3):
-                                glove.prev_buttons[i] = 0
-                        self.midi_controller.reset_all_buttons()
+                angle_tuple = self.calculate_angle()
+                if self.audio and angle_tuple is not None:
+                    angle = angle_tuple[0]
+                    if len(angle_tuple) == 2: 
+                        self.midi_controller.update(angle, angle_tuple[1])
+                    else:
+                        self.midi_controller.update(angle)
+
+                    # if reset:
+                    #     self.player_buttons = [False, False, False, False, False, False]
+                    #     for i in range(len(self.gloves)):
+                    #         glove = self.gloves[i]
+                    #         for i in range(3):
+                    #             glove.prev_buttons[i] = 0
+                    #     self.midi_controller.reset_all_buttons()
 
                 # Check for button state changes
                 for i in range(len(self.gloves)):
                     first_three = False
                     if (i == 0 or i == 2): first_three = True
                     glove = self.gloves[i]
-                    button_states = glove.check_buttons()
+                    button_states = glove.check_buttons(i + 1)
                     for j in range(3):
                         if (button_states[j] == 1 and glove.prev_buttons[j] == 0) or (button_states[j] == 0 and glove.prev_buttons[j] == 1):
                             print("CHANGE IN BUTTON STATE FOR BUTTON ", j, " ON GLOVE ", i+1)
@@ -99,34 +104,62 @@ class DeviceManager:
                                     self.midi_controller.play_button_note_on(glove_id=i+1, note=j)
                                 else:
                                     self.midi_controller.play_button_note_off(glove_id=i+1, note=j)
+                
+                for i in range(len(self.gloves)):
+                    glove = self.gloves[i]
+                    button_states = glove.check_buttons(i + 1)
+                    if (button_states[3] == 1 and glove.prev_buttons[3] == 0) or (button_states[3] == 0 and glove.prev_buttons[3] == 1):
+                        print("CHANGE IN BUTTON STATE FOR RESET BUTTON ON GLOVE ", i + 1)
+                        if (button_states[3] == 1): glove.prev_buttons[3] = 1
+                        else: glove.prev_buttons[3] = 0
+
+                        self.player_buttons = [False, False, False, False, False, False]
+                        self.midi_controller.reset_all_buttons()
 
                 await asyncio.sleep(0.01) # slight delay between calculations
                 
 
     def calculate_angle(self):
         # Gonna test by calculating angle between gloves id 1 and id 2 for now
-        g0 = self.gloves[1]
-        g1 = self.gloves[2]
+        g0 = self.gloves[0] #g0 = self.gloves[1]
+        g1 = self.gloves[3] #g1 = self.gloves[2]
+        # Ok now we also calculate angle between gloves id 3 and id 4
+        g2 = self.gloves[1]
+        g3 = self.gloves[2]
 
         # Compute forward tilt for g0
         mag0 = (g0.ax * g0.ax + g0.ay * g0.ay + g0.az * g0.az) ** 0.5
         # Compute forward tilt for g1
         mag1 = (g1.ax * g1.ax + g1.ay * g1.ay + g1.az * g1.az) ** 0.5
+
+        # Compute forward tilt for g2
+        mag2 = (g2.ax * g2.ax + g2.ay * g2.ay + g2.az * g2.az) ** 0.5
+        # Compute forward tilt for g3
+        mag3 = (g3.ax * g3.ax + g3.ay * g3.ay + g3.az * g3.az) ** 0.5
         
         # Prevent divide by zero error
         if (mag0 == 0 or mag1 == 0):
+            return None
+        
+        if (mag2 == 0 or mag3 == 0):
             return None
         
         # Compute tilt
         tilt0 = math.atan2(g0.az / mag0, g0.ax / mag0)
         tilt1 = math.atan2(g1.az / mag1, g1.ax / mag1)
 
+        tilt2 = math.atan2(g2.az / mag2, g2.ax / mag2)
+        tilt3 = math.atan2(g3.az / mag3, g3.ax / mag3)
+
         # Compute angle
         angle = tilt0 - tilt1
         angle = math.degrees(angle)
         #print("Angle: ", angle)
 
-        return angle
+        angle2 = tilt2 - tilt3
+        angle2 = math.degrees(angle2)
+
+        return angle, angle2
 
 
     def new_glove_data(self, gloveID, ax, ay, az, pinky, ring, middle, index):

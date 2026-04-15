@@ -35,7 +35,7 @@ async def test_inversion_only(controller):
     print("Starting Inversion Sweep Test (Bass locked)...")
     await asyncio.sleep(2)
     
-    fixed_bass_angle = 0 
+    fixed_bass_angle = 0
     
     for wrist_angle in range(-180, 181, 2):
         controller.update(bass_angle=fixed_bass_angle, inversion_angle=wrist_angle)
@@ -49,11 +49,11 @@ async def test_both(controller):
     print("Starting Combined Sweep Test...")
     await asyncio.sleep(2)
     
-    # Here we map both to change over time. 
+    # Here we map both to change over time.
     for angle in range(-180, 180):
         # We make the wrist twist twice as fast as the arm moves so you can 
         # clearly hear the inversions flipping over the changing bass notes!
-        wrist_angle = (angle * 2) % 360 - 180 
+        wrist_angle = (angle * 2) % 360 - 180
         
         controller.update(bass_angle=angle, inversion_angle=wrist_angle)
         await asyncio.sleep(0.02)
@@ -65,11 +65,11 @@ async def main():
     scale = [48, 50, 52, 53, 55, 57]
     
     controller = ContinuousMIDIController(
-        port_name=PORT_NAME, 
-        arpeg_port_name=ARPEG_PORT_NAME, 
-        button_port_name=BUTTON_PORT_NAME, 
-        min_val=-180, 
-        max_val=180, 
+        port_name=PORT_NAME,
+        arpeg_port_name=ARPEG_PORT_NAME,
+        button_port_name=BUTTON_PORT_NAME,
+        min_val=-180,
+        max_val=180,
         scale=scale
     )
     
@@ -92,7 +92,7 @@ async def main():
         await simulate_task
         
         # cancel the arpeggio task since the simulation is done
-        arpeg_task.cancel() 
+        arpeg_task.cancel()
         
     except KeyboardInterrupt:
         print("\nstopping simulation...")

@@ -15,7 +15,7 @@ class ContinuousMIDIController:
         # notes for the buttons 
         self.button_scale_intervals = [12, 14, 16, 19, 21, 23]
         self.prev_button_notes = []
-        self.button_notes = []
+        self.button_notes = [60, 62, 64, 67, 69, 71]
         
         self.port_name = port_name
         self.port = None
@@ -31,6 +31,7 @@ class ContinuousMIDIController:
 
         #arpeggio settings
         self.numofinversions = numofinversions
+        self.current_inversion = 0
         
         self._connect_midi()
     
@@ -50,7 +51,7 @@ class ContinuousMIDIController:
             0: [0, 2, 4, 7, 11],  # 1st Note (I chord): maj9
             1: [0, 3, 5, 7, 10],  # 2nd Note (ii chord): min7 add 11
             2: [0, 3, 5, 7, 10],  # 3rd Note (iii chord): min7 add 11
-            3: [0, 2, 4, 7, 10],  # 4th Note (IV chord): maj9 
+            3: [0, 2, 4, 7, 11],  # 4th Note (IV chord): maj9 
             4: [0, 2, 4, 5, 7],   # 5th Note (V chord): sus2 add 11
             5: [0, 3, 5, 7, 10],  # 6th Note (vi chord): min7 add 11
         }
@@ -144,11 +145,8 @@ class ContinuousMIDIController:
             
             # plays new note
             self.port.send(mido.Message('note_on', note=new_note, velocity=100))
-
-            self.prev_button_notes = self.button_notes
-            self.button_notes = self.build_button_notes(new_note)
             
-            # test print confirmation 
+            # test print confirmation
             print(f"Input crossed threshold! Value: {bass_angle:.1f} -> Playing Note: {new_note}")
             
             # updates note
@@ -164,7 +162,7 @@ class ContinuousMIDIController:
         if not self.arpeg_port:
             return
 
-        beat_time = 60 / bpm
+        beat_time = 12.5 / bpm
 
         while True:
             if self.current_note is None:
@@ -179,6 +177,7 @@ class ContinuousMIDIController:
                 self.arpeg_port.send(mido.Message('note_off', note=note, velocity=0))
 
     def play_button_note_on(self, glove_id, note):
+        print(self.button_notes[note])
 
         if not self.button_port:
             return
@@ -186,7 +185,7 @@ class ContinuousMIDIController:
         if self.current_note is None:
             return
 
-        self.button_notes = self.build_button_notes(self.current_note)
+        #self.button_notes = self.build_button_notes(self.current_note)
        #if (glove_id == 1 or glove_id == 3): 
         if (glove_id == 1 or glove_id == 3):
             # First three notes of scale
@@ -196,13 +195,15 @@ class ContinuousMIDIController:
             self.button_port.send(mido.Message('note_on', note=self.button_notes[note + 3], velocity=100))
 
     def play_button_note_off(self, glove_id, note):
+        print(self.button_notes[note])
+
         if not self.button_port:
             return
         
         if self.current_note is None:
             return
 
-        self.button_notes = self.build_button_notes(self.current_note)
+        #self.button_notes = self.build_button_notes(self.current_note)
 
         if (glove_id == 1 or glove_id == 3):
             # First three notes of scale
@@ -215,10 +216,9 @@ class ContinuousMIDIController:
         if not self.button_port:
             return
         
-        for note in self.prev_button_notes:
+        for note in self.button_notes:
             self.button_port.send(mido.Message('note_off', note=note, velocity=0))
-        
-        self.prev_button_notes = []
+
 
 
 

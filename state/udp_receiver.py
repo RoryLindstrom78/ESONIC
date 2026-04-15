@@ -22,11 +22,12 @@ class UDPServer(asyncio.Protocol):
         Data should be sent as JSON in the following format:
 
         CORRESPONDING HANDS:
-        - id 1 is person 1 left hand
-        - id 2 is person 2 right hand
-        - id 3 is person 2 left hand
-        - id 4 is person 1 right hand
+        - id 1: person 1 left
+        - id 2: person 1 right
+        - id 3: person 2 left
+        - id 4: person 2 right
 
+        
         ANY HAND OF ANY PERSON:
         {
             "id": 1,    // changes per person/hand
